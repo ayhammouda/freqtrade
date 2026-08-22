@@ -46,3 +46,17 @@ def test_daily_calendar_preserves_gap_without_ohlcv_fill() -> None:
     assert gap["contiguous_raw_candle_run"] == 0
     assert calendar.iloc[-1]["contiguous_raw_candle_run"] == 2
     assert calendar.iloc[-1]["trailing_90d_observed_slots"] == 3
+    assert calendar.iloc[-1]["trailing_90d_expected_slots"] == 4
+
+
+def test_daily_calendar_rejects_non_midnight_timestamps() -> None:
+    frame = pd.DataFrame(
+        {
+            "date": pd.to_datetime(["2026-01-01 12:00:00"], utc=True),
+            "close": [100.0],
+            "volume": [10.0],
+        }
+    )
+
+    with pytest.raises(ValueError, match="midnight UTC"):
+        build_daily_raw_calendar(frame)

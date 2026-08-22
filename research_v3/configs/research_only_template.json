@@ -1,4 +1,6 @@
 {
+  "schema": "research_v3_non_executable_contract_v1",
+  "not_a_freqtrade_config": true,
   "status": "research_only_not_executable",
   "purpose": "infrastructure_preflight",
   "trading_mode": "spot",

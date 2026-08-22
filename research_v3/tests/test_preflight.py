@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from research_v3.engine.preflight_verification import verify_preflight_bundle
 from research_v3.scripts.run_preflight import PAIR_CODES, run
@@ -16,6 +17,9 @@ def test_preflight_generates_consumed_audit_artifacts(tmp_path: Path) -> None:
     frame = pd.DataFrame(
         {
             "date": pd.date_range("2026-01-01", periods=3, freq="1D", tz="UTC"),
+            "open": [100.0, 101.0, 102.0],
+            "high": [101.0, 102.0, 103.0],
+            "low": [99.0, 100.0, 101.0],
             "close": [100.0, 101.0, 102.0],
             "volume": [10.0, 20.0, 30.0],
         }
@@ -26,12 +30,15 @@ def test_preflight_generates_consumed_audit_artifacts(tmp_path: Path) -> None:
         "status": "research_only_not_executable",
         "purpose": "infrastructure_preflight",
         "trading_mode": "spot",
+        "stake_currency": "USDC",
         "margin_mode": None,
         "exchange": None,
         "candidate_strategy": None,
         "historical_strategy_trials_authorized": 0,
         "dry_run_authorized": False,
         "live_trading_authorized": False,
+        "schema": "research_v3_non_executable_contract_v1",
+        "not_a_freqtrade_config": True,
     }
     config_path = repository / "config.json"
     config_path.write_text(json.dumps(config), encoding="utf-8")
@@ -46,3 +53,10 @@ def test_preflight_generates_consumed_audit_artifacts(tmp_path: Path) -> None:
     assert set(manifest["consumption_status"]) == {"consumed_audit_only"}
     verification = verify_preflight_bundle(repository, repository / "artifacts", config_path)
     assert verification["status"] == "preflight_bundle_verified_not_strategy_evidence"
+
+    report_path = repository / "artifacts" / "PREFLIGHT_REPORT.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["pair_count"] = 10
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+    with pytest.raises(ValueError, match="non-execution controls"):
+        verify_preflight_bundle(repository, repository / "artifacts", config_path)

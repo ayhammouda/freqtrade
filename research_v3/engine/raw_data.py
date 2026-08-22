@@ -76,6 +76,57 @@ def has_contiguous_raw_prefix(
     )
 
 
+def verify_freqtrade_loader_provenance(
+    datadir: Path, pair: str, timeframe: str, raw_dates: Iterable[object]
+) -> dict[str, int]:
+    """Check local Freqtrade loader modes against raw timestamps without any strategy execution.
+
+    The unfilled mode must preserve the raw timestamp set exactly.  Filled mode is expected to add
+    timestamps for pairs with source gaps; those additions must be observable and rejected by the
+    anti-synthesis primitive rather than silently accepted.
+    """
+    from freqtrade.data.history import load_pair_history
+    from freqtrade.enums import CandleType
+
+    raw = utc_index(raw_dates)
+    expected_slots = int((raw[-1] - raw[0]) / pd.Timedelta(days=1)) + 1
+    unfilled = load_pair_history(
+        pair=pair,
+        timeframe=timeframe,
+        datadir=datadir,
+        fill_up_missing=False,
+        drop_incomplete=False,
+        data_format="feather",
+        candle_type=CandleType.SPOT,
+    )
+    assert_no_synthetic_timestamps(raw, unfilled["date"])
+    filled = load_pair_history(
+        pair=pair,
+        timeframe=timeframe,
+        datadir=datadir,
+        fill_up_missing=True,
+        drop_incomplete=False,
+        data_format="feather",
+        candle_type=CandleType.SPOT,
+    )
+    filled_dates = utc_index(filled["date"])
+    synthetic_count = int((~filled_dates.isin(raw)).sum())
+    if synthetic_count:
+        try:
+            assert_no_synthetic_timestamps(raw, filled_dates)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Filled loader timestamps were not rejected as synthetic")
+    return {
+        "raw_rows": len(raw),
+        "unfilled_rows": len(unfilled),
+        "filled_rows": len(filled),
+        "filled_synthetic_timestamps": synthetic_count,
+        "raw_missing_slots_in_span": expected_slots - len(raw),
+    }
+
+
 def _contiguous_run(present: pd.Series) -> list[int]:
     run = 0
     values: list[int] = []
@@ -100,6 +151,8 @@ def build_daily_raw_calendar(frame: pd.DataFrame) -> pd.DataFrame:
 
     raw = frame.loc[:, ["date", "close", "volume"]].copy()
     raw["date"] = utc_index(raw["date"])
+    if not (raw["date"].dt.normalize() == raw["date"]).all():
+        raise ValueError("Daily raw timestamps must be midnight UTC")
     raw["quote_turnover_usdc"] = raw["close"] * raw["volume"]
     full_dates = pd.date_range(raw["date"].iloc[0], raw["date"].iloc[-1], freq="1D", tz="UTC")
     calendar = pd.DataFrame({"date": full_dates}).merge(

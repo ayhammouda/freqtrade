@@ -8,9 +8,12 @@ from research_v3.engine.research_config import validate_research_only_config
 
 def valid_config() -> dict[str, object]:
     return {
+        "schema": "research_v3_non_executable_contract_v1",
+        "not_a_freqtrade_config": True,
         "status": "research_only_not_executable",
         "purpose": "infrastructure_preflight",
         "trading_mode": "spot",
+        "stake_currency": "USDC",
         "margin_mode": None,
         "exchange": None,
         "candidate_strategy": None,
@@ -38,3 +41,10 @@ def test_strategy_or_dry_run_authorization_is_rejected() -> None:
 
     with pytest.raises(ValueError, match="not safe"):
         validate_research_only_config(config)
+
+
+def test_nested_credentials_and_unknown_keys_are_rejected() -> None:
+    with pytest.raises(ValueError, match="Credential-like"):
+        validate_research_only_config(valid_config() | {"exchanges": [{"api_key": "x"}]})
+    with pytest.raises(ValueError, match="unknown keys"):
+        validate_research_only_config(valid_config() | {"ccxt_config": {}})

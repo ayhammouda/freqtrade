@@ -9,7 +9,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from research_v3.engine.raw_data import build_daily_raw_calendar, sha256_file, utc_index
+from research_v3.engine.raw_data import (
+    build_daily_raw_calendar,
+    sha256_file,
+    utc_index,
+    verify_freqtrade_loader_provenance,
+)
 from research_v3.engine.research_config import validate_research_only_config
 
 
@@ -26,6 +31,7 @@ def run(repository: Path, output_dir: Path, config_path: Path) -> dict[str, obje
     config = json.loads(config_path.read_text(encoding="utf-8"))
     validate_research_only_config(config)
     calendars: list[pd.DataFrame] = []
+    loader_checks: dict[str, dict[str, int]] = {}
     manifest: list[dict[str, object]] = []
     for pair in PAIR_CODES:
         path = source_path(repository, pair)
@@ -33,6 +39,9 @@ def run(repository: Path, output_dir: Path, config_path: Path) -> dict[str, obje
             raise FileNotFoundError(f"Missing approved source: {path}")
         frame = pd.read_feather(path, columns=["date", "close", "volume"])
         dates = utc_index(frame["date"])
+        loader_checks[f"{pair}/USDC"] = verify_freqtrade_loader_provenance(
+            path.parent, f"{pair}/USDC", "1d", dates
+        )
         calendar = build_daily_raw_calendar(frame)
         calendar.insert(0, "pair", f"{pair}/USDC")
         calendars.append(calendar)
@@ -64,6 +73,7 @@ def run(repository: Path, output_dir: Path, config_path: Path) -> dict[str, obje
         "dry_run_authorized": False,
         "historical_strategy_trials_authorized": 0,
         "live_trading_authorized": False,
+        "freqtrade_loader_provenance": loader_checks,
         "output_calendar_rows": len(full_calendar),
         "output_manifest_rows": len(manifest),
         "pair_count": len(PAIR_CODES),

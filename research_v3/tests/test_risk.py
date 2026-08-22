@@ -57,3 +57,15 @@ def test_slots_and_pair_order_are_deterministic() -> None:
         "BTC/USDC",
         "SOL/USDC",
     ]
+
+
+def test_policy_ceilings_and_constraint_ties_are_conservative() -> None:
+    with pytest.raises(ValueError, match="policy ceiling"):
+        calculate_capped_stake(inputs(intended_risk_fraction=0.01))
+    with pytest.raises(ValueError, match="policy ceiling"):
+        calculate_capped_stake(inputs(maximum_heat_fraction=0.01))
+    with pytest.raises(ValueError, match="positive"):
+        calculate_capped_stake(inputs(stop_distance_fraction=0.0))
+
+    tied = calculate_capped_stake(inputs(maximum_stake=25 / 0.108, maximum_gross_fraction=1.0))
+    assert tied.limiting_constraint == "risk"

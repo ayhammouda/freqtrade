@@ -49,7 +49,9 @@ def _verify_report(output_dir: Path) -> dict[str, object]:
     return report
 
 
-def _verify_manifest(repository: Path, output_dir: Path, report: dict[str, object]) -> int:
+def _verify_manifest(
+    repository: Path, output_dir: Path, report: dict[str, object]
+) -> list[dict[str, str]]:
     """Verify source provenance against the raw files present now."""
 
     with (output_dir / "RAW_SOURCE_MANIFEST.csv").open(newline="", encoding="utf-8") as handle:
@@ -66,10 +68,12 @@ def _verify_manifest(repository: Path, output_dir: Path, report: dict[str, objec
             raise ValueError(f"Raw source hash changed since preflight: {row['source_file']}")
         if row["consumption_status"] != "consumed_audit_only":
             raise ValueError(f"Unexpected consumption status for {row['pair']}")
-    return len(manifest)
+    return manifest
 
 
-def _verify_calendar(output_dir: Path, report: dict[str, object]) -> int:
+def _verify_calendar(
+    output_dir: Path, report: dict[str, object], manifest: list[dict[str, str]]
+) -> int:
     """Verify the gap-preserving raw calendar schema and simple invariants."""
 
     calendar = pd.read_csv(output_dir / "RAW_DAILY_CALENDAR.csv")
@@ -83,6 +87,10 @@ def _verify_calendar(output_dir: Path, report: dict[str, object]) -> int:
         raise ValueError("A missing raw candle has nonzero contiguous history")
     if (calendar["trailing_90d_observed_slots"] > calendar["trailing_90d_expected_slots"]).any():
         raise ValueError("Observed raw candles exceed expected calendar slots")
+    observed_by_pair = calendar.groupby("pair")["raw_candle_present"].sum().astype(int).to_dict()
+    for row in manifest:
+        if observed_by_pair.get(row["pair"]) != int(row["raw_observed_candles"]):
+            raise ValueError(f"Calendar raw presence does not match source for {row['pair']}")
     return len(calendar)
 
 
@@ -93,12 +101,27 @@ def verify_preflight_bundle(
     config = json.loads(config_path.read_text(encoding="utf-8"))
     validate_research_only_config(config)
     report = _verify_report(output_dir)
-    manifest_rows = _verify_manifest(repository, output_dir, report)
-    calendar_rows = _verify_calendar(output_dir, report)
+    manifest = _verify_manifest(repository, output_dir, report)
+    loader_checks = report.get("freqtrade_loader_provenance")
+    if not isinstance(loader_checks, dict) or set(loader_checks) != {
+        row["pair"] for row in manifest
+    }:
+        raise ValueError("Loader provenance checks are missing or incomplete")
+    if any(check.get("unfilled_rows") != check.get("raw_rows") for check in loader_checks.values()):
+        raise ValueError("Unfilled Freqtrade loader changed raw timestamp coverage")
+    expected_synthetic = sum(
+        check.get("raw_missing_slots_in_span", 0) for check in loader_checks.values()
+    )
+    observed_synthetic = sum(
+        check.get("filled_synthetic_timestamps", 0) for check in loader_checks.values()
+    )
+    if expected_synthetic > 0 and observed_synthetic <= 0:
+        raise ValueError("Filled Freqtrade loader did not expose any synthetic timestamps")
+    calendar_rows = _verify_calendar(output_dir, report, manifest)
 
     return {
         "calendar_rows": calendar_rows,
-        "manifest_rows": manifest_rows,
+        "manifest_rows": len(manifest),
         "pair_count": report["pair_count"],
         "status": "preflight_bundle_verified_not_strategy_evidence",
     }

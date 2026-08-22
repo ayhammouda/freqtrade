@@ -21,6 +21,8 @@ and generate audit facts. No statistic emitted by this phase is strategy perform
 - The research-only configuration has no exchange section or credential-like field and explicitly
   disables dry-run and live-trading authorization.
 - Risk code is pure arithmetic. It has no default strategy parameters and cannot place an order.
+- The preflight invokes Freqtrade's local history loader only to compare its filled and unfilled
+  timestamp sets against raw files. It does not instantiate a strategy, backtest, exchange, or order.
 
 ## Preflight acceptance gates
 
@@ -32,15 +34,23 @@ The bundle is ready for independent infrastructure review only when all of the f
    and trailing 90-calendar-day completeness/zero-volume/turnover facts without declaring a pair
    eligible.
 3. Any timestamp present in a post-loader dataframe but absent from raw source timestamps is a hard
-   failure. A gap resets contiguous history.
+   failure. Each preflight records local Freqtrade loader checks in filled and unfilled modes; a gap
+   resets contiguous history.
 4. Position stake arithmetic includes stop distance, entry cost, exit cost, and adverse fill; it
    respects supplied risk, heat, gross, slot, minimum-stake, and maximum-stake constraints.
 5. Pair selection ordering is deterministic and independent of whitelist input order.
 6. Unit tests, Ruff, the preflight command, source manifest checks, and a local artifact manifest
-   pass from a clean process.
+   pass from a clean process. The manifest excludes bytecode, test reports, caches, and itself.
+7. A trailing 90-day completeness, zero-volume, or turnover fact is usable only when its companion
+   `trailing_90d_expected_slots` equals 90; this phase does not convert that rule into eligibility.
 
 ## Explicit non-goals
 
 This protocol does not authorize selection of the reserved BTC/ETH daily trend family, define an
 outer horizon, set a liquidity threshold, or open a new trial budget. Those require a separate,
 complete prospective protocol and a fresh independent review after this infrastructure gate passes.
+
+## Integrity limitation
+
+The SHA-256 manifest is a local integrity check, not an immutable timestamp anchor. A future
+prospective protocol must obtain an external timestamp before its first unseen candle.

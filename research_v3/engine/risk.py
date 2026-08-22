@@ -10,8 +10,20 @@ from dataclasses import dataclass
 from math import isfinite
 
 
+POLICY_MAX_INTENDED_RISK_FRACTION = 0.0025
+POLICY_MAX_HEAT_FRACTION = 0.0075
+POLICY_MAX_GROSS_EXPOSURE_FRACTION = 1.0
+
+
 @dataclass(frozen=True)
 class PositionRiskInputs:
+    """Explicit inputs for one prospective stake decision.
+
+    ``existing_heat_fraction`` is the sum of each open position's stake multiplied by its own
+    effective-loss fraction, divided by account equity.  It is not gross notional exposure.
+    ``effective_loss_fraction`` remains a modeled stop-fill loss, not a worst-case gap-loss bound.
+    """
+
     equity: float
     intended_risk_fraction: float
     stop_distance_fraction: float
@@ -59,8 +71,14 @@ def _validate(inputs: PositionRiskInputs) -> None:
         raise ValueError("Equity and stake limits must be positive")
     if inputs.minimum_stake > inputs.maximum_stake:
         raise ValueError("minimum_stake cannot exceed maximum_stake")
-    if not 0 < inputs.intended_risk_fraction <= 1:
-        raise ValueError("intended_risk_fraction must be in (0, 1]")
+    if not 0 < inputs.intended_risk_fraction <= POLICY_MAX_INTENDED_RISK_FRACTION:
+        raise ValueError("intended_risk_fraction exceeds the frozen policy ceiling")
+    if inputs.stop_distance_fraction <= 0:
+        raise ValueError("stop_distance_fraction must be positive")
+    if inputs.maximum_heat_fraction > POLICY_MAX_HEAT_FRACTION:
+        raise ValueError("maximum_heat_fraction exceeds the frozen policy ceiling")
+    if inputs.maximum_gross_fraction > POLICY_MAX_GROSS_EXPOSURE_FRACTION:
+        raise ValueError("maximum_gross_fraction exceeds the frozen policy ceiling")
     if any(
         value < 0
         for value in (
@@ -98,13 +116,15 @@ def calculate_capped_stake(inputs: PositionRiskInputs) -> StakeDecision:
     heat_capacity = max(0.0, inputs.maximum_heat_fraction - inputs.existing_heat_fraction)
     heat_stake = (inputs.equity * heat_capacity) / effective_loss
     gross_stake = max(0.0, inputs.equity * inputs.maximum_gross_fraction - inputs.existing_gross)
-    candidates = {
-        "risk": risk_stake,
-        "heat": heat_stake,
-        "gross": gross_stake,
-        "exchange_maximum": inputs.maximum_stake,
-    }
-    limiting_constraint, stake = min(candidates.items(), key=lambda item: (item[1], item[0]))
+    candidates = (
+        ("risk", risk_stake),
+        ("heat", heat_stake),
+        ("gross", gross_stake),
+        ("exchange_maximum", inputs.maximum_stake),
+    )
+    limiting_constraint, stake = min(enumerate(candidates), key=lambda item: (item[1][1], item[0]))[
+        1
+    ]
     if stake < inputs.minimum_stake:
         return StakeDecision("skip", 0.0, effective_loss, intended_loss, 0.0, limiting_constraint)
     return StakeDecision(
