@@ -1,0 +1,12 @@
+{
+  "status": "research_only_not_executable",
+  "purpose": "infrastructure_preflight",
+  "trading_mode": "spot",
+  "margin_mode": null,
+  "stake_currency": "USDC",
+  "exchange": null,
+  "candidate_strategy": null,
+  "historical_strategy_trials_authorized": 0,
+  "dry_run_authorized": false,
+  "live_trading_authorized": false
+}

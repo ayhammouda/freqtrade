@@ -1,0 +1,12 @@
+pair,timeframe,source_file,source_sha256,raw_start_utc,raw_end_utc,raw_observed_candles,consumption_status
+BTC/USDC,1d,user_data/data/binance/BTC_USDC-1d.feather,5290c9fc24dc3901949d5fc161d3c7869e9573c786f53b49f33912cd249d3f8f,2020-01-01T00:00:00Z,2026-08-21T00:00:00Z,2262,consumed_audit_only
+ETH/USDC,1d,user_data/data/binance/ETH_USDC-1d.feather,90ee6b19d17a704fe99294e40eb4be1a1ac5ab3a345029ef9f4e86db9a453ba6,2020-06-01T00:00:00Z,2026-08-21T00:00:00Z,2110,consumed_audit_only
+TRX/USDC,1d,user_data/data/binance/TRX_USDC-1d.feather,093b1521b3a4f856526864fb8118f79e67c23a14aa13bcbca440c03f0aa3efe6,2020-06-01T00:00:00Z,2026-08-21T00:00:00Z,1568,consumed_audit_only
+BNB/USDC,1d,user_data/data/binance/BNB_USDC-1d.feather,f46578e194e3599e1fea0eb1d374cb560b467ff39be77c953ea3932108ff86f9,2020-06-01T00:00:00Z,2026-08-21T00:00:00Z,2110,consumed_audit_only
+LTC/USDC,1d,user_data/data/binance/LTC_USDC-1d.feather,d3d922bcf0ab5c5dbe3f930d99359267ee074580dc054ffcf50d85e647bd9f82,2020-06-01T00:00:00Z,2026-08-21T00:00:00Z,1722,consumed_audit_only
+XRP/USDC,1d,user_data/data/binance/XRP_USDC-1d.feather,d896c295a06a4d480a072c879828e94811977fedb12eee32d539f21f44ac0693,2020-06-01T00:00:00Z,2026-08-21T00:00:00Z,1819,consumed_audit_only
+SOL/USDC,1d,user_data/data/binance/SOL_USDC-1d.feather,d45ea468c4302a2896a6abc3c1b177b9f60b23197b11f02a514a9a606bff7a8d,2021-09-24T00:00:00Z,2026-08-21T00:00:00Z,1339,consumed_audit_only
+BCH/USDC,1d,user_data/data/binance/BCH_USDC-1d.feather,7d4837ebc8d364181b73c2ff0ec59fd3f92c8212acc369c59b63ec8e3f442098,2021-01-01T00:00:00Z,2026-08-21T00:00:00Z,1508,consumed_audit_only
+XLM/USDC,1d,user_data/data/binance/XLM_USDC-1d.feather,488c9b93a4b45b0f840ed05fa8da6d3e1011c360f440b6e025770abf744f0115,2024-12-04T00:00:00Z,2026-08-21T00:00:00Z,626,consumed_audit_only
+DOT/USDC,1d,user_data/data/binance/DOT_USDC-1d.feather,cd25e08512854c6893a3c93628990d79108a8e7125a443951ad193a2e4c6bf05,2023-12-28T00:00:00Z,2026-08-21T00:00:00Z,968,consumed_audit_only
+ADA/USDC,1d,user_data/data/binance/ADA_USDC-1d.feather,ff8ca16cf9df3c517a7ee0f26f484bedbeed07ed4fa2d397465192314c1fc801,2020-06-01T00:00:00Z,2026-08-21T00:00:00Z,1819,consumed_audit_only

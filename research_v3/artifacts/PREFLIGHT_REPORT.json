@@ -1,0 +1,10 @@
+{
+  "candidate_strategy": null,
+  "dry_run_authorized": false,
+  "historical_strategy_trials_authorized": 0,
+  "live_trading_authorized": false,
+  "output_calendar_rows": 21509,
+  "output_manifest_rows": 11,
+  "pair_count": 11,
+  "status": "infrastructure_preflight_passed_not_strategy_evidence"
+}
