@@ -1,0 +1,7 @@
+research_v2 data coverage audit
+repository=C:\Users\hammo\Documents\GitHub\freqtrade
+files_scanned=66
+daily_pairs_passing_endpoint_screen=BTC/USDC,ETH/USDC,BNB/USDC,XRP/USDC,SOL/USDC
+all_rows_consumption_status=consumed_research_data
+note=endpoint screen is not a point-in-time calendar or strategy authorization
+note=Freqtrade backtesting default fill behavior is audited separately in RESULTS.md

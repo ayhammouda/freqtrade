@@ -1,0 +1,9 @@
+research_v2 legacy RAvg raw-warmup audit
+warmup_candles=600
+rule=the 600 raw 4h timestamps immediately preceding each entry must be exactly 4h apart
+group=inner_selection archives=8 trades=177235 violations=19880
+group=inner_selection violation_pairs=ADA/USDC:2340,BCH/USDC:968,BNB/USDC:2250,BTC/USDC:2748,ETH/USDC:3036,LTC/USDC:2432,SOL/USDC:2448,TRX/USDC:1314,XRP/USDC:2344
+group=selected_outer_archives archives=16 trades=4004 violations=0
+group=selected_outer_archives violation_pairs=none
+group=grid_outer_diagnostic archives=8 trades=34804 violations=0
+group=grid_outer_diagnostic violation_pairs=none

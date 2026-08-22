@@ -1,0 +1,13 @@
+research_v2 bundle verification
+data_coverage_rows=66
+data_source_hashes=66_ok
+legacy_inner_entries=177235
+legacy_inner_warmup_violations=19880
+legacy_outer_entries_checked=38808
+legacy_outer_warmup_violations=0
+legacy_strategy_hashes=5_ok
+safe_config_credentials=none
+strategy_and_trading_authorization=false
+verdict_consistency=ok
+historical_trial_budget=0
+status=pass
