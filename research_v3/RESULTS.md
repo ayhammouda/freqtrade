@@ -1,6 +1,6 @@
 # Research V3 — Infrastructure Preflight Results
 
-**Verdict: Remediation in progress after independent review; not ready for strategy evaluation or dry-run.**
+**Verdict: Infrastructure controls passed independent review; not ready for strategy evaluation or dry-run.**
 
 The preflight workflow has produced raw-candle provenance and gap-preserving daily fact calendars
 for the 11 approved USDC pairs. It contains no candidate strategy, does not authorize historical
@@ -22,3 +22,7 @@ strategy trials, and cannot authorize dry-run or live trading.
 
 These are infrastructure observations only. They make no claim about eligibility thresholds,
 signal quality, return, expectancy, drawdown, or future performance.
+
+The independent Claude Opus 5 re-audit is preserved in
+`REVIEWS/CLAUDE_OPUS_5_REVIEW_2026-08-22.md`. Its pass applies only to infrastructure controls;
+the next possible decision remains a separate prospective-protocol review, never a strategy run.

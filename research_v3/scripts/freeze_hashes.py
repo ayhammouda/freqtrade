@@ -24,12 +24,15 @@ def digest(path: Path) -> str:
 def manifest_lines(root: Path) -> list[str]:
     """Produce deterministic manifest lines, excluding the self-referential manifest."""
     files = sorted(
-        path
-        for path in root.rglob("*")
-        if path.is_file()
-        and path.name not in EXCLUDED_FILES
-        and path.suffix not in {".pyc", ".pyo"}
-        and not EXCLUDED_PARTS.intersection(path.relative_to(root).parts)
+        (
+            path
+            for path in root.rglob("*")
+            if path.is_file()
+            and path.name not in EXCLUDED_FILES
+            and path.suffix not in {".pyc", ".pyo"}
+            and not EXCLUDED_PARTS.intersection(path.relative_to(root).parts)
+        ),
+        key=lambda path: path.relative_to(root).as_posix(),
     )
     return [f"{digest(path)}  {path.relative_to(root).as_posix()}" for path in files]
 
